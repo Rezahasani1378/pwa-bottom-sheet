@@ -190,7 +190,7 @@ export function createReduxStorageProvider(): StorageProvider {
 
 ## Design Patterns
 
-This library is built on four design patterns:
+This library is built on five design patterns:
 
 ### Stack
 
@@ -211,6 +211,19 @@ Both `SheetStackManager` and `HistoryManager` implement the **Observer pattern**
 ### Mediator
 
 `BackNavigationMediator` sits between the stack and the History API, **coordinating** them so they never fall out of sync. When the user presses the browser back button, the mediator pops the stack. When `back()` is called programmatically, it pops the stack _and_ calls `history.go(-1)`. A `programmaticNavigation` guard prevents double-pops.
+
+### Strategy
+
+The `StorageProvider` interface is the **Strategy pattern**. `SheetStackManager` calls `save()`, `load()`, and `clear()` on whatever storage object was injected — it never knows the concrete implementation. You can swap `sessionStorage` for Redux, Zustand, IndexedDB, or anything else by passing a different object that satisfies the same three-method contract.
+
+```
+SheetRouter
+  ├─ persist=false       → storage = null (no-op)
+  ├─ no storageProvider  → createSessionStorageProvider()  (default)
+  └─ storageProvider={x} → your custom implementation
+        ▼
+  SheetStackManager calls x.save() / x.load() / x.clear()
+```
 
 ### Provider (React Context)
 
