@@ -1,0 +1,54 @@
+.sr-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.sr-backdrop[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sr-sheet {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;
+  border-radius: 0;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition:
+    transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
+    scale 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+
+.sr-sheet[data-open="true"] {
+  transform: translateY(0);
+}
+
+.sr-sheet[data-behind="true"] {
+  transform: translateY(0);
+  scale: 0.95;
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.sr-handle {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 4px;
+}
+
+.sr-handle-bar {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: #d1d5db;
+}
+
+.sr-content {
+  padding: 8px 24px 32px;
+}
