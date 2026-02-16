@@ -9,19 +9,30 @@ var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "sy
 
 // src/lib/sheet-stack-manager.ts
 var SheetStackManager = class {
-  constructor() {
+  constructor(storage) {
     __publicField(this, "stack", []);
     __publicField(this, "listeners", /* @__PURE__ */ new Set());
     __publicField(this, "snapshot", []);
+    __publicField(this, "storage");
+    this.storage = storage;
+    if (this.storage) {
+      const restored = this.storage.load();
+      if (restored.length > 0) {
+        this.stack = restored.map((entry) => ({ ...entry }));
+        this.updateSnapshot();
+      }
+    }
   }
   push(entry) {
     this.stack.push(entry);
+    this.persist();
     this.updateSnapshot();
     this.notify();
   }
   pop() {
     const entry = this.stack.pop();
     if (entry) {
+      this.persist();
       this.updateSnapshot();
       this.notify();
     }
@@ -32,6 +43,7 @@ var SheetStackManager = class {
       return;
     }
     this.stack.length = 0;
+    this.persist();
     this.updateSnapshot();
     this.notify();
   }
@@ -56,6 +68,9 @@ var SheetStackManager = class {
       this.listeners.delete(listener);
     };
   }
+  persist() {
+    this.storage?.save(this.stack);
+  }
   updateSnapshot() {
     this.snapshot = [...this.stack];
   }
@@ -73,22 +88,48 @@ var HistoryManager = class {
   constructor() {
     __publicField(this, "subscribers", /* @__PURE__ */ new Set());
     __publicField(this, "handlePopState", null);
+    __publicField(this, "depth", 0);
     if (!isBrowser) {
       return;
     }
     this.handlePopState = (event) => {
-      if (isSheetHistoryState(event.state)) {
-        return;
+      const targetDepth = isSheetHistoryState(event.state) ? event.state.depth : 0;
+      if (targetDepth < this.depth) {
+        this.depth = targetDepth;
+        this.notifyBack();
+      } else {
+        this.depth = targetDepth;
       }
-      this.notifyBack();
     };
     window.addEventListener("popstate", this.handlePopState);
+  }
+  restoreEntries(entryIds) {
+    if (!isBrowser) {
+      return;
+    }
+    if (isSheetHistoryState(window.history.state)) {
+      window.history.replaceState(null, "", window.location.href);
+    }
+    for (const entryId of entryIds) {
+      this.depth += 1;
+      const state = {
+        __sheetRouter: true,
+        entryId,
+        depth: this.depth
+      };
+      window.history.pushState(state, "", window.location.href);
+    }
   }
   pushState(entryId) {
     if (!isBrowser) {
       return;
     }
-    const state = { __sheetRouter: true, entryId };
+    this.depth += 1;
+    const state = {
+      __sheetRouter: true,
+      entryId,
+      depth: this.depth
+    };
     window.history.pushState(state, "", window.location.href);
   }
   goBack(count = 1) {
@@ -96,6 +137,7 @@ var HistoryManager = class {
       return;
     }
     if (count > 0) {
+      this.depth = Math.max(0, this.depth - count);
       window.history.go(-count);
     }
   }
@@ -133,6 +175,12 @@ var BackNavigationMediator = class {
     this.unsubscribeHistory = this.historyManager.subscribe(() => {
       this.handleBack();
     });
+    const restoredEntries = this.sheetStack.getSnapshot();
+    if (restoredEntries.length > 0) {
+      this.historyManager.restoreEntries(
+        restoredEntries.map((entry) => entry.id)
+      );
+    }
   }
   open(path, params = {}) {
     const entry = {
@@ -178,6 +226,54 @@ var BackNavigationMediator = class {
     this.sheetStack.pop();
   }
 };
+
+// src/lib/session-storage.ts
+var STORAGE_KEY = "__sheetRouter_stack";
+var isBrowser2 = typeof window !== "undefined";
+function validateEntries(parsed) {
+  if (!Array.isArray(parsed)) {
+    return [];
+  }
+  return parsed.filter(
+    (entry) => typeof entry === "object" && entry !== null && typeof entry.id === "string" && typeof entry.path === "string" && typeof entry.params === "object"
+  );
+}
+function createSessionStorageProvider() {
+  return {
+    save(stack) {
+      if (!isBrowser2) {
+        return;
+      }
+      try {
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stack));
+      } catch {
+      }
+    },
+    load() {
+      if (!isBrowser2) {
+        return [];
+      }
+      try {
+        const raw = sessionStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          return [];
+        }
+        return validateEntries(JSON.parse(raw));
+      } catch {
+        return [];
+      }
+    },
+    clear() {
+      if (!isBrowser2) {
+        return;
+      }
+      try {
+        sessionStorage.removeItem(STORAGE_KEY);
+      } catch {
+      }
+    }
+  };
+}
 var SheetRouterContext = react.createContext(null);
 function useSheetRouterContext() {
   const context = react.useContext(SheetRouterContext);
@@ -289,9 +385,10 @@ function collectBaseContent(children) {
   });
   return base;
 }
-function SheetRouter({ children }) {
+function SheetRouter({ children, persist = true, storageProvider }) {
   const mediator = react.useMemo(() => {
-    const stack2 = new SheetStackManager();
+    const storage = persist ? storageProvider ?? createSessionStorageProvider() : null;
+    const stack2 = new SheetStackManager(storage);
     const history = new HistoryManager();
     return new BackNavigationMediator(stack2, history);
   }, []);
@@ -371,6 +468,7 @@ function useBeforeUnload(enabled) {
 
 exports.SheetRoute = SheetRoute;
 exports.SheetRouter = SheetRouter;
+exports.createSessionStorageProvider = createSessionStorageProvider;
 exports.useBeforeUnload = useBeforeUnload;
 exports.useSheetNavigate = useSheetNavigate;
 exports.useSheetParams = useSheetParams;

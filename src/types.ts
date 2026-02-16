@@ -25,6 +25,12 @@ export interface SheetRouteProps {
   title?: string;
 }
 
+export interface StorageProvider {
+  save: (stack: readonly StackEntry[]) => void;
+  load: () => StackEntry[];
+  clear: () => void;
+}
+
 export type Listener = () => void;
 
 export type BackHandler = () => void;

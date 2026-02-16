@@ -1,10 +1,5 @@
 import * as react_jsx_runtime from 'react/jsx-runtime';
-import { ReactNode, ComponentType } from 'react';
-
-interface SheetRouterProps {
-    children: ReactNode;
-}
-declare function SheetRouter({ children }: SheetRouterProps): react_jsx_runtime.JSX.Element;
+import { ComponentType, ReactNode } from 'react';
 
 interface StackEntry {
     id: string;
@@ -27,6 +22,18 @@ interface SheetRouteProps {
     component: ComponentType;
     title?: string;
 }
+interface StorageProvider {
+    save: (stack: readonly StackEntry[]) => void;
+    load: () => StackEntry[];
+    clear: () => void;
+}
+
+interface SheetRouterProps {
+    children: ReactNode;
+    persist?: boolean;
+    storageProvider?: StorageProvider;
+}
+declare function SheetRouter({ children, persist, storageProvider }: SheetRouterProps): react_jsx_runtime.JSX.Element;
 
 declare function SheetRoute(_props: SheetRouteProps): null;
 declare namespace SheetRoute {
@@ -42,4 +49,6 @@ declare function useSheetParams<T extends Record<string, unknown> = Record<strin
 
 declare function useBeforeUnload(enabled: boolean): void;
 
-export { type RouteDefinition, type SheetNavigator, SheetRoute, type SheetRouteProps, SheetRouter, type StackEntry, useBeforeUnload, useSheetNavigate, useSheetParams };
+declare function createSessionStorageProvider(): StorageProvider;
+
+export { type RouteDefinition, type SheetNavigator, SheetRoute, type SheetRouteProps, SheetRouter, type StackEntry, type StorageProvider, createSessionStorageProvider, useBeforeUnload, useSheetNavigate, useSheetParams };

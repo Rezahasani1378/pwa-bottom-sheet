@@ -4,7 +4,6 @@
   background: rgba(0, 0, 0, 0.5);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease;
 }
 
 .sr-backdrop[data-open="true"] {
@@ -19,14 +18,12 @@
   border-radius: 0;
   overflow-y: auto;
   transform: translateY(100%);
-  transition:
-    transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
-    scale 0.35s cubic-bezier(0.32, 0.72, 0, 1);
   will-change: transform;
 }
 
 .sr-sheet[data-open="true"] {
   transform: translateY(0);
+  animation: sr-slide-up 0.35s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .sr-sheet[data-behind="true"] {
@@ -34,6 +31,16 @@
   scale: 0.95;
   border-radius: 12px;
   pointer-events: none;
+  transition: scale 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes sr-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 .sr-handle {

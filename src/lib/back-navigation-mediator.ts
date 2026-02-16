@@ -25,6 +25,13 @@ class BackNavigationMediator {
     this.unsubscribeHistory = this.historyManager.subscribe(() => {
       this.handleBack();
     });
+
+    const restoredEntries = this.sheetStack.getSnapshot();
+    if (restoredEntries.length > 0) {
+      this.historyManager.restoreEntries(
+        restoredEntries.map((entry) => entry.id),
+      );
+    }
   }
 
   open(path: string, params: Record<string, unknown> = {}): void {

@@ -1,12 +1,26 @@
-import type { StackEntry, Listener } from "../types";
+import type { StackEntry, Listener, StorageProvider } from "../types";
 
 class SheetStackManager {
   private stack: StackEntry[] = [];
   private listeners = new Set<Listener>();
   private snapshot: readonly StackEntry[] = [];
+  private storage: StorageProvider | null;
+
+  constructor(storage: StorageProvider | null) {
+    this.storage = storage;
+
+    if (this.storage) {
+      const restored = this.storage.load();
+      if (restored.length > 0) {
+        this.stack = restored.map((entry) => ({ ...entry }));
+        this.updateSnapshot();
+      }
+    }
+  }
 
   push(entry: StackEntry): void {
     this.stack.push(entry);
+    this.persist();
     this.updateSnapshot();
     this.notify();
   }
@@ -14,6 +28,7 @@ class SheetStackManager {
   pop(): StackEntry | undefined {
     const entry = this.stack.pop();
     if (entry) {
+      this.persist();
       this.updateSnapshot();
       this.notify();
     }
@@ -25,6 +40,7 @@ class SheetStackManager {
       return;
     }
     this.stack.length = 0;
+    this.persist();
     this.updateSnapshot();
     this.notify();
   }
@@ -54,6 +70,10 @@ class SheetStackManager {
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  private persist(): void {
+    this.storage?.save(this.stack);
   }
 
   private updateSnapshot(): void {

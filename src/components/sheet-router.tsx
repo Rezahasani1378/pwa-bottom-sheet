@@ -6,15 +6,18 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import type { RouteDefinition, SheetRouteProps, StackEntry } from "../types";
+import type { RouteDefinition, SheetRouteProps, StackEntry, StorageProvider } from "../types";
 import { SheetStackManager } from "../lib/sheet-stack-manager";
 import { HistoryManager } from "../lib/history-manager";
 import { BackNavigationMediator } from "../lib/back-navigation-mediator";
+import { createSessionStorageProvider } from "../lib/session-storage";
 import { SheetRouterContext } from "../context/sheet-router-context";
 import { SheetOutlet } from "./sheet-outlet";
 
 interface SheetRouterProps {
   children: ReactNode;
+  persist?: boolean;
+  storageProvider?: StorageProvider;
 }
 
 const EMPTY_STACK: readonly StackEntry[] = [];
@@ -54,11 +57,15 @@ function collectBaseContent(children: ReactNode): ReactNode[] {
   return base;
 }
 
-function SheetRouter({ children }: SheetRouterProps) {
+function SheetRouter({ children, persist = true, storageProvider }: SheetRouterProps) {
   const mediator = useMemo(() => {
-    const stack = new SheetStackManager();
+    const storage = persist
+      ? (storageProvider ?? createSessionStorageProvider())
+      : null;
+    const stack = new SheetStackManager(storage);
     const history = new HistoryManager();
     return new BackNavigationMediator(stack, history);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

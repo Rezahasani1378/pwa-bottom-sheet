@@ -5,6 +5,7 @@ const isBrowser = typeof window !== "undefined";
 interface SheetHistoryState {
   __sheetRouter: true;
   entryId: string;
+  depth: number;
 }
 
 function isSheetHistoryState(state: unknown): state is SheetHistoryState {
@@ -19,6 +20,7 @@ function isSheetHistoryState(state: unknown): state is SheetHistoryState {
 class HistoryManager {
   private subscribers = new Set<BackHandler>();
   private handlePopState: ((event: PopStateEvent) => void) | null = null;
+  private depth = 0;
 
   constructor() {
     if (!isBrowser) {
@@ -26,19 +28,48 @@ class HistoryManager {
     }
 
     this.handlePopState = (event: PopStateEvent) => {
-      if (isSheetHistoryState(event.state)) {
-        return;
+      const targetDepth = isSheetHistoryState(event.state)
+        ? event.state.depth
+        : 0;
+
+      if (targetDepth < this.depth) {
+        this.depth = targetDepth;
+        this.notifyBack();
+      } else {
+        this.depth = targetDepth;
       }
-      this.notifyBack();
     };
     window.addEventListener("popstate", this.handlePopState);
+  }
+
+  restoreEntries(entryIds: string[]): void {
+    if (!isBrowser) {
+      return;
+    }
+    if (isSheetHistoryState(window.history.state)) {
+      window.history.replaceState(null, "", window.location.href);
+    }
+    for (const entryId of entryIds) {
+      this.depth += 1;
+      const state: SheetHistoryState = {
+        __sheetRouter: true,
+        entryId,
+        depth: this.depth,
+      };
+      window.history.pushState(state, "", window.location.href);
+    }
   }
 
   pushState(entryId: string): void {
     if (!isBrowser) {
       return;
     }
-    const state: SheetHistoryState = { __sheetRouter: true, entryId };
+    this.depth += 1;
+    const state: SheetHistoryState = {
+      __sheetRouter: true,
+      entryId,
+      depth: this.depth,
+    };
     window.history.pushState(state, "", window.location.href);
   }
 
@@ -47,6 +78,7 @@ class HistoryManager {
       return;
     }
     if (count > 0) {
+      this.depth = Math.max(0, this.depth - count);
       window.history.go(-count);
     }
   }
