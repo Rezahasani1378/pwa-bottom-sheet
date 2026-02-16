@@ -7,6 +7,7 @@ interface BottomSheetProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  height?: string;
 }
 
 function BottomSheet({
@@ -16,7 +17,10 @@ function BottomSheet({
   onClose,
   title,
   children,
+  height,
 }: BottomSheetProps) {
+  const isFullScreen = !height || height === "100%";
+
   return (
     <>
       <div
@@ -30,7 +34,11 @@ function BottomSheet({
         className="sr-sheet"
         data-open={open}
         data-behind={behind}
-        style={{ zIndex: zIndex + 1 }}
+        data-full={isFullScreen}
+        style={{
+          zIndex: zIndex + 1,
+          ...(height ? { height } : {}),
+        }}
         role="dialog"
         aria-modal="true"
         aria-label={title}

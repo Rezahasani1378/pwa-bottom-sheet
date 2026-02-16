@@ -37,8 +37,8 @@ function collectRoutes(children: ReactNode): Map<string, RouteDefinition> {
 
   Children.forEach(children, (child) => {
     if (isSheetRouteElement(child)) {
-      const { path, component, title } = child.props;
-      routes.set(path, { path, component, title });
+      const { path, component, title, height } = child.props;
+      routes.set(path, { path, component, title, height });
     }
   });
 

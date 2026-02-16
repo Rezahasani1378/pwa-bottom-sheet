@@ -10,6 +10,7 @@ interface RouteDefinition {
     path: string;
     component: ComponentType;
     title?: string;
+    height?: string;
 }
 interface SheetNavigator {
     open: (path: string, params?: Record<string, unknown>) => void;
@@ -21,6 +22,7 @@ interface SheetRouteProps {
     path: string;
     component: ComponentType;
     title?: string;
+    height?: string;
 }
 interface StorageProvider {
     save: (stack: readonly StackEntry[]) => void;

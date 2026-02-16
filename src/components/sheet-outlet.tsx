@@ -28,6 +28,7 @@ function SheetOutlet() {
             zIndex={zIndex}
             onClose={() => mediator.back()}
             title={route.title ?? route.path}
+            height={route.height}
           >
             <SheetParamsContext.Provider
               value={{ path: entry.path, params: entry.params }}

@@ -300,8 +300,10 @@ function BottomSheet({
   zIndex,
   onClose,
   title,
-  children
+  children,
+  height
 }) {
+  const isFullScreen = !height || height === "100%";
   return /* @__PURE__ */ jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [
     /* @__PURE__ */ jsxRuntime.jsx(
       "div",
@@ -319,7 +321,11 @@ function BottomSheet({
         className: "sr-sheet",
         "data-open": open,
         "data-behind": behind,
-        style: { zIndex: zIndex + 1 },
+        "data-full": isFullScreen,
+        style: {
+          zIndex: zIndex + 1,
+          ...height ? { height } : {}
+        },
         role: "dialog",
         "aria-modal": "true",
         "aria-label": title,
@@ -350,6 +356,7 @@ function SheetOutlet() {
         zIndex,
         onClose: () => mediator.back(),
         title: route.title ?? route.path,
+        height: route.height,
         children: /* @__PURE__ */ jsxRuntime.jsx(
           SheetParamsContext.Provider,
           {
@@ -370,8 +377,8 @@ function collectRoutes(children) {
   const routes = /* @__PURE__ */ new Map();
   react.Children.forEach(children, (child) => {
     if (isSheetRouteElement(child)) {
-      const { path, component, title } = child.props;
-      routes.set(path, { path, component, title });
+      const { path, component, title, height } = child.props;
+      routes.set(path, { path, component, title, height });
     }
   });
   return routes;

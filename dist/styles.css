@@ -4,6 +4,7 @@
   background: rgba(0, 0, 0, 0.5);
   opacity: 0;
   pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 
 .sr-backdrop[data-open="true"] {
@@ -13,7 +14,10 @@
 
 .sr-sheet {
   position: fixed;
-  inset: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
   background: #ffffff;
   border-radius: 0;
   overflow-y: auto;
@@ -24,6 +28,10 @@
 .sr-sheet[data-open="true"] {
   transform: translateY(0);
   animation: sr-slide-up 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.sr-sheet[data-open="true"]:not([data-full="true"]) {
+  border-radius: 16px 16px 0 0;
 }
 
 .sr-sheet[data-behind="true"] {

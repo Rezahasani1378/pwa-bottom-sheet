@@ -10,6 +10,7 @@ export interface RouteDefinition {
   path: string;
   component: ComponentType;
   title?: string;
+  height?: string;
 }
 
 export interface SheetNavigator {
@@ -23,6 +24,7 @@ export interface SheetRouteProps {
   path: string;
   component: ComponentType;
   title?: string;
+  height?: string;
 }
 
 export interface StorageProvider {
