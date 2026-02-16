@@ -23,6 +23,8 @@
   overflow-y: auto;
   transform: translateY(100%);
   will-change: transform;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .sr-sheet[data-open="true"] {
@@ -55,6 +57,11 @@
   display: flex;
   justify-content: center;
   padding: 12px 0 4px;
+  cursor: grab;
+}
+
+.sr-handle:active {
+  cursor: grabbing;
 }
 
 .sr-handle-bar {
