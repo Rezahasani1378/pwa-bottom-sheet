@@ -320,9 +320,9 @@ function BottomSheet({
       startY: e.clientY,
       currentY: e.clientY,
       dragging: false,
-      sheetHeight: sheet.offsetHeight
+      sheetHeight: sheet.offsetHeight,
+      pointerId: e.pointerId
     };
-    sheet.setPointerCapture(e.pointerId);
     sheet.style.animation = "none";
   }, []);
   const onPointerMove = useCallback((e) => {
@@ -336,6 +336,7 @@ function BottomSheet({
     const deltaY = state.currentY - state.startY;
     if (!state.dragging && deltaY > 5) {
       state.dragging = true;
+      sheet.setPointerCapture(state.pointerId);
       sheet.style.transition = "none";
     }
     if (!state.dragging) {
@@ -356,10 +357,16 @@ function BottomSheet({
       dragState.current = null;
       return;
     }
-    sheet.releasePointerCapture(e.pointerId);
+    if (state.dragging) {
+      sheet.releasePointerCapture(e.pointerId);
+    }
     const deltaY = state.currentY - state.startY;
     const dismissed = state.dragging && deltaY > state.sheetHeight * DISMISS_THRESHOLD;
     dragState.current = null;
+    if (!state.dragging) {
+      sheet.style.animation = "";
+      return;
+    }
     if (dismissed) {
       sheet.style.transition = "transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)";
       sheet.style.transform = "translateY(100%)";
