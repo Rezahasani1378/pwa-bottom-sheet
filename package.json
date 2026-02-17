@@ -1,6 +1,6 @@
 {
   "name": "@rezahasani78/sheet-router",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "A declarative, router-like bottom sheet stack for React. Handles Android/browser back button with unlimited stacked sheets.",
   "type": "module",
   "main": "./dist/index.cjs",
